@@ -1,0 +1,61 @@
+name: CD
+
+on:
+  workflow_run:
+    workflows:
+      - CI
+    types:
+      - completed
+  workflow_dispatch:
+
+jobs:
+  functional-test:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Pull Docker image
+        run: docker pull unclesema2/bd-lab-1-8:latest
+
+      - name: Run container
+        run: docker run -d -p 8000:8000 --name api unclesema2/bd-lab-1-8:latest
+
+      - name: Wait for API to be ready
+        run: |
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:8000/health; then
+              echo "API is ready"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "API did not start in time"
+          docker logs api
+          exit 1
+
+      - name: Run functional API test
+        run: |
+          response=$(curl -sS -X POST "http://localhost:8000/predict" \
+            -H "Content-Type: application/json" \
+            -d @tests/test_0.json)
+          echo "Response: $response"
+          echo "$response" | grep -q '"prediction":'
+
+      - name: Run unit tests with coverage inside container
+        run: |
+          docker exec api sh -c "pip install --no-cache-dir coverage==7.6.10 && \
+            coverage run -m unittest discover -s src/unit_tests -p 'test_*.py' && \
+            coverage report -m"
+
+      - name: Stop container
+        if: always()
+        run: docker rm -f api

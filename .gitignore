@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+*.pyo
+.env
+.coverage
+logfile.log
+data/
+experiments/
+*.sav
+.venv
