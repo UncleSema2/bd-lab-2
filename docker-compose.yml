@@ -1,13 +1,68 @@
 services:
+  cassandra:
+    image: cassandra:5.0
+    container_name: ml-cassandra
+    restart: unless-stopped
+    ports:
+      - "9042:9042"
+    environment:
+      CASSANDRA_CLUSTER_NAME: MLCluster
+      CASSANDRA_DC: DC1
+      CASSANDRA_RACK: Rack1
+      CASSANDRA_ENDPOINT_SNITCH: GossipingPropertyFileSnitch
+      CASSANDRA_NUM_TOKENS: 256
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh -e 'describe cluster' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    networks:
+      - ml-network
+
   web:
     build:
       context: .
-    image: unclesema2/bd-lab-1-8:latest
+    image: unclesema2/bd-lab-2-8:latest
     pull_policy: build
     ports:
       - "8000:8000"
+    environment:
+      CASSANDRA_HOST_FILE: /run/secrets/cassandra_host
+      CASSANDRA_PORT_FILE: /run/secrets/cassandra_port
+      CASSANDRA_USERNAME_FILE: /run/secrets/cassandra_username
+      CASSANDRA_PASSWORD_FILE: /run/secrets/cassandra_password
+      CASSANDRA_KEYSPACE_FILE: /run/secrets/cassandra_keyspace
+      MODEL_VERSION: ${MODEL_VERSION:-1.0.0}
+    secrets:
+      - cassandra_host
+      - cassandra_port
+      - cassandra_username
+      - cassandra_password
+      - cassandra_keyspace
+    depends_on:
+      cassandra:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health').status==200 else 1)"]
       interval: 10s
       timeout: 3s
       retries: 5
+    networks:
+      - ml-network
+
+networks:
+  ml-network:
+    driver: bridge
+
+secrets:
+  cassandra_host:
+    file: ./secrets/cassandra_host.txt
+  cassandra_port:
+    file: ./secrets/cassandra_port.txt
+  cassandra_username:
+    file: ./secrets/cassandra_username.txt
+  cassandra_password:
+    file: ./secrets/cassandra_password.txt
+  cassandra_keyspace:
+    file: ./secrets/cassandra_keyspace.txt

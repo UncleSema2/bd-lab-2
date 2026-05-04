@@ -1,3 +1,4 @@
+from datetime import datetime
 from pydantic import BaseModel, Field
 from typing import List
 
@@ -8,5 +9,19 @@ class PredictRequest(BaseModel):
 
 
 class PredictResponse(BaseModel):
+    prediction_id: str
     prediction: int
-    model: str
+    probability_malignant: float
+    probability_benign: float
+    created_at: datetime
+    model_version: str
+
+
+class PredictionRecord(BaseModel):
+    prediction_id: str
+    features: List[float]
+    prediction: int
+    probability_malignant: float
+    probability_benign: float
+    created_at: datetime
+    model_version: str

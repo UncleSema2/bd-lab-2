@@ -7,3 +7,4 @@ pydantic==2.10.4
 coverage==7.6.10
 dvc==3.67.1
 dvc-s3==3.3.0
+cassandra-driver==3.29.2
