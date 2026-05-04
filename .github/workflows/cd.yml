@@ -24,10 +24,10 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Pull Docker image
-        run: docker pull unclesema2/bd-lab-1-8:latest
+        run: docker pull unclesema2/bd-lab-2-8:latest
 
       - name: Run container
-        run: docker run -d -p 8000:8000 --name api unclesema2/bd-lab-1-8:latest
+        run: docker run -d -p 8000:8000 --name api unclesema2/bd-lab-2-8:latest
 
       - name: Wait for API to be ready
         run: |
