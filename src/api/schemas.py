@@ -25,3 +25,20 @@ class PredictionRecord(BaseModel):
     probability_benign: float
     created_at: datetime
     model_version: str
+
+
+class TrainResponse(BaseModel):
+    model: str
+    trained: bool
+    train_samples: int
+    message: str
+
+
+class EvaluateResponse(BaseModel):
+    model: str
+    accuracy: float
+    precision: float
+    recall: float
+    f1: float
+    eval_samples: int
+    message: str

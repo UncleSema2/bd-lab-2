@@ -1,13 +1,35 @@
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.params import Query
 
-from src.api.schemas import PredictRequest, PredictResponse, PredictionRecord
+from src.api.schemas import (
+    PredictRequest,
+    PredictResponse,
+    PredictionRecord,
+    TrainResponse,
+    EvaluateResponse,
+)
 
 router = APIRouter()
 
 
 def get_service(request: Request):
     return request.app.state.prediction_service
+
+
+def get_model_service(request: Request):
+    return request.app.state.model_service
+
+
+@router.post("/train", response_model=TrainResponse)
+async def train(request: Request, model: str = "LOG_REG"):
+    service = get_model_service(request)
+    return await service.train(model=model)
+
+
+@router.post("/evaluate", response_model=EvaluateResponse)
+async def evaluate(request: Request, model: str = "LOG_REG"):
+    service = get_model_service(request)
+    return await service.evaluate(model=model)
 
 
 @router.post("/predict", response_model=PredictResponse)

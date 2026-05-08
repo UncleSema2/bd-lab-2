@@ -7,7 +7,9 @@ from cassandra.auth import PlainTextAuthProvider
 
 from src.api.routes import router
 from src.api.repositories.prediction_repository import PredictionRepository
+from src.api.repositories.dataset_repository import DatasetRepository
 from src.api.services.prediction_service import PredictionService
+from src.api.services.model_service import ModelService
 
 
 @asynccontextmanager
@@ -35,6 +37,7 @@ async def lifespan(app: FastAPI):
     cluster.connect()
 
     repository = PredictionRepository(cluster, cassandra_keyspace)
+    dataset_repository = DatasetRepository(cluster, cassandra_keyspace)
 
     prediction_service = PredictionService(
         config_path="config.ini",
@@ -42,8 +45,14 @@ async def lifespan(app: FastAPI):
         prediction_repository=repository,
     )
 
+    model_service = ModelService(
+        config_path="config.ini",
+        dataset_repository=dataset_repository,
+    )
+
     app.state.cluster = cluster
     app.state.prediction_service = prediction_service
+    app.state.model_service = model_service
 
     try:
         yield
