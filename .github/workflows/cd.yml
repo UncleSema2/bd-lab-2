@@ -63,6 +63,18 @@ jobs:
           echo "Response: $response"
           echo "$response" | grep -q '"prediction":'
 
+      - name: Run /train endpoint
+        run: |
+          response=$(curl -sS -X POST "http://localhost:8000/train?model=LOG_REG")
+          echo "Response: $response"
+          echo "$response" | grep -q '"trained":true'
+
+      - name: Run /evaluate endpoint
+        run: |
+          response=$(curl -sS -X POST "http://localhost:8000/evaluate?model=LOG_REG")
+          echo "Response: $response"
+          echo "$response" | grep -q '"accuracy":'
+
       - name: Run unit tests with coverage inside container
         run: |
           docker compose -f docker-compose.prod.yml exec -T web sh -c "pip install --no-cache-dir coverage==7.6.10 && \
