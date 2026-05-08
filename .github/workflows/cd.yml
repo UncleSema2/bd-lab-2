@@ -29,6 +29,7 @@ jobs:
       - name: Create .env file
         run: |
           cat > .env <<EOF
+          CASSANDRA_HOST=${{ secrets.CASSANDRA_HOST }}
           CASSANDRA_USERNAME=${{ secrets.CASSANDRA_USERNAME }}
           CASSANDRA_PASSWORD=${{ secrets.CASSANDRA_PASSWORD }}
           CASSANDRA_KEYSPACE=${{ secrets.CASSANDRA_KEYSPACE }}
