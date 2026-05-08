@@ -1,40 +1,27 @@
 import os
 from contextlib import asynccontextmanager
-from pathlib import Path
 
 from fastapi import FastAPI
 from cassandra.cluster import Cluster
+from cassandra.auth import PlainTextAuthProvider
 
 from src.api.routes import router
 from src.api.repositories.prediction_repository import PredictionRepository
 from src.api.services.prediction_service import PredictionService
 
 
-def read_setting(name: str) -> str:
-    file_path = os.getenv(f"{name}_FILE")
-    if not file_path:
-        raise RuntimeError(f"Missing required setting file pointer: {name}_FILE")
-
-    value = Path(file_path).read_text(encoding="utf-8").strip()
-    if not value:
-        raise RuntimeError(f"Empty setting in file for: {name}")
-
-    return value
-
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    cassandra_host = read_setting("CASSANDRA_HOST")
-    cassandra_port = int(read_setting("CASSANDRA_PORT"))
-    cassandra_username = read_setting("CASSANDRA_USERNAME")
-    cassandra_password = read_setting("CASSANDRA_PASSWORD")
-    cassandra_keyspace = read_setting("CASSANDRA_KEYSPACE")
+    cassandra_host = os.environ["CASSANDRA_HOST"]
+    cassandra_port = int(os.environ["CASSANDRA_PORT"])
+    cassandra_username = os.environ["CASSANDRA_USERNAME"]
+    cassandra_password = os.environ["CASSANDRA_PASSWORD"]
+    cassandra_keyspace = os.environ["CASSANDRA_KEYSPACE"]
 
     model_version = os.getenv("MODEL_VERSION", "1.0.0")
 
     auth_provider = None
     if cassandra_username and cassandra_password:
-        from cassandra.auth import PlainTextAuthProvider
         auth_provider = PlainTextAuthProvider(
             username=cassandra_username,
             password=cassandra_password,
@@ -45,13 +32,7 @@ async def lifespan(app: FastAPI):
         port=cassandra_port,
         auth_provider=auth_provider,
     )
-
-    try:
-        cluster.connect()
-    except Exception as e:
-        if auth_provider:
-            cluster = Cluster([cassandra_host], port=cassandra_port)
-            cluster.connect()
+    cluster.connect()
 
     repository = PredictionRepository(cluster, cassandra_keyspace)
 

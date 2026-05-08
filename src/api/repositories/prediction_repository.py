@@ -1,7 +1,4 @@
-from datetime import datetime
-from uuid import uuid4
-from typing import List
-
+from uuid import UUID
 from cassandra.cluster import Cluster
 from cassandra.query import SimpleStatement
 
@@ -52,7 +49,7 @@ class PredictionRepository:
         self.session.execute(
             stmt,
             (
-                prediction.prediction_id,
+                UUID(prediction.prediction_id),
                 prediction.features,
                 prediction.prediction,
                 prediction.probability_malignant,

@@ -4,13 +4,9 @@ import pickle
 from uuid import uuid4
 import numpy as np
 from datetime import datetime
-from typing import TYPE_CHECKING
 
 from src.api.schemas import PredictionRecord
-
-
-if TYPE_CHECKING:
-    from src.api.repositories.prediction_repository import PredictionRepository
+from src.api.repositories.prediction_repository import PredictionRepository
 
 
 class PredictionService:
@@ -41,10 +37,9 @@ class PredictionService:
                         self._classifiers[name] = pickle.load(f)
 
     def predict(self, features: list[float], model: str = "LOG_REG") -> dict:
+        self._load_artifacts()
         if model not in self._classifiers:
             raise ValueError(f"Unknown model: {model}")
-
-        self._load_artifacts()
         if model not in self._classifiers:
             raise ValueError(f"Model {model} not trained yet")
 
@@ -54,13 +49,9 @@ class PredictionService:
         classifier = self._classifiers[model]
         prediction = int(classifier.predict(X_scaled)[0])
 
-        if hasattr(classifier, "predict_proba"):
-            proba = classifier.predict_proba(X_scaled)[0]
-            probability_malignant = float(proba[1])
-            probability_benign = float(proba[0])
-        else:
-            probability_malignant = 0.0
-            probability_benign = 0.0
+        proba = classifier.predict_proba(X_scaled)[0]
+        probability_malignant = float(proba[1])
+        probability_benign = float(proba[0])
 
         return {
             "prediction": prediction,
