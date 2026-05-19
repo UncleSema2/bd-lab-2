@@ -37,7 +37,7 @@ jobs:
 
       - name: Run unit tests with coverage
         run: |
-          coverage run -m unittest discover -s src/unit_tests -p "test_*.py"
+          coverage run --source=src -m unittest discover -s src/unit_tests -p "test_*.py"
           coverage report -m
 
   build-and-push:
@@ -69,7 +69,7 @@ jobs:
       - name: Generate dev_sec_ops.yml
         run: |
           {
-            echo "docker_image: unclesema2/bd-lab-1-8:${GITHUB_SHA}"
+            echo "docker_image: unclesema2/bd-lab-2-8:${GITHUB_SHA}"
             echo "last_5_commits:"
             git log -n 5 --pretty=format:'  - %h'
             echo ""
@@ -88,5 +88,5 @@ jobs:
           context: .
           push: true
           tags: |
-            unclesema2/bd-lab-1-8:latest
-            unclesema2/bd-lab-1-8:${{ github.sha }}
+            unclesema2/bd-lab-2-8:latest
+            unclesema2/bd-lab-2-8:${{ github.sha }}

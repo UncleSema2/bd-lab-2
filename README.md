@@ -58,6 +58,8 @@ dvc repro
 
 - `/health` -- проверка состояния сервиса
 - `/predict` -- предсказание класса опухоли
+- `/train` -- обучение модели
+- `/evaluate` -- оценка качества модели
 
 ## /predict
 
@@ -74,6 +76,51 @@ curl -X POST http://localhost:8000/predict -H "Content-Type: application/json" -
   "model": "LOG_REG"
 }
 ```
+
+## /train
+
+POST запрос для обучения модели данными из Cassandra.
+
+```bash
+curl -X POST "http://localhost:8000/train"
+```
+
+Ответ:
+```json
+{
+  "model": "LOG_REG",
+  "trained": true,
+  "train_samples": 455,
+  "message": "Model LOG_REG trained successfully on 455 samples"
+}
+```
+
+## /evaluate
+
+POST запрос для оценки качества модели на тестовых данных из Cassandra.
+
+```bash
+curl -X POST "http://localhost:8000/evaluate"
+```
+
+Ответ:
+```json
+{
+  "model": "LOG_REG",
+  "accuracy": 0.9737,
+  "precision": 0.9722,
+  "recall": 0.9722,
+  "f1": 0.9722,
+  "eval_samples": 114,
+  "message": "Evaluation complete on 114 samples"
+}
+```
+
+---
+
+# Хранение данных
+
+Train и eval данные загружаются в Cassandra при старте контейнера (через `cassandra-init.sh`) в таблицы `train_data` и `eval_data`. Ручки `/train` и `/evaluate` читают данные оттуда.
 
 ---
 
@@ -111,6 +158,8 @@ Swagger UI: http://localhost:8000/docs
 ```bash
 docker-compose up --build
 ```
+
+При старте Cassandra автоматически загружает train/eval данные в таблицы `train_data` / `eval_data`.
 
 ## Тестирование
 
